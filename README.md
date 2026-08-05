@@ -28,7 +28,7 @@ The perception layer attached to each observer. It gathers nearby colliders thro
 
 The sensor also builds a procedural view-cone mesh each frame, raycasting against occlusion geometry and resolving edges through iterative bisection so the visualized cone hugs walls and obstacles accurately. The mesh's color is driven by the observer's current suspicion level, giving immediate visual feedback as detection builds.
 
-### `AISensorManager 
+### `AISensorManager`
 
 A singleton that batches the overlap-sphere queries of every sensor in the scene into a single jobified `OverlapSphereCommand.ScheduleBatch` call using Unity's Job System and Native Collections. Queries are scheduled on one frame and collected on the next, alternating so the main thread never blocks on physics results. This keeps the cost of many concurrent sensors low and scales well as observer counts grow.
 
