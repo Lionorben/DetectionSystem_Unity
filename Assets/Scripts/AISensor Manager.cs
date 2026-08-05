@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class AISensorManager : MonoBehaviour
 {
-    public static AISensorManager Instance;
+    public static AISensorManager Instance { get; private set; }
     private void Awake()
     {
         if (!Instance)
@@ -15,8 +15,9 @@ public class AISensorManager : MonoBehaviour
         }
     }
 
-    //Maximum of collider hits per animal
-    public int MaxColliderHits = 5;
+    //Maximum of collider hits
+    [SerializeField] private int maxColliderHits = 5;
+    public int MaxColliderHits => maxColliderHits;
 
     //Non native lists
     private List<OverlapSphereCommand> commandList;
@@ -34,7 +35,9 @@ public class AISensorManager : MonoBehaviour
 
     //Job
     [NonSerialized]
-    public JobHandle overlapSphereJobHandle;
+    private JobHandle overlapSphereJobHandle;
+    public JobHandle OverlapSphereJobHandle => overlapSphereJobHandle;
+
     private bool runOverlapSphereJob = true;
 
     //Memory allocation
@@ -60,11 +63,15 @@ public class AISensorManager : MonoBehaviour
         catch { }
     }
 
+    /// <summary>
+    /// Registers or updates an overlap sphere command for batch processing using the Unity Job System.
+    /// Returns an ID that the sensor can use to fetch its specific results after the job completes.
+    /// </summary>
     public int AddOverlapSphere(Vector3 pos, float distance, LayerMask layers, int id = -1)
     {
         queryParameters.layerMask = layers;
 
-        //Add new animals overlapSphere
+        //Add new overlapSphere
         if (id == -1)
         {
             //Instantiate(GameObject.CreatePrimitive(PrimitiveType.Sphere), pos, Quaternion.identity);
@@ -72,7 +79,7 @@ public class AISensorManager : MonoBehaviour
 
             id = commandList.Count - 1;
         }
-        //Update current animals overlapSphere 
+        //Update current overlapSphere 
         else
         {
             //Instantiate(GameObject.CreatePrimitive(PrimitiveType.Cube), pos, Quaternion.identity);
@@ -82,7 +89,10 @@ public class AISensorManager : MonoBehaviour
         return id;
     }
 
-    //remove the command, because the animal is destroyed (a bit hacky, we don't actually remove the command, we just make it really, really cheap)
+    /// <summary>
+    /// Disables an overlap sphere command by zeroing out its radius and position, 
+    /// effectively removing it from processing without altering the array structure.
+    /// </summary>
     public void RemoveOverlapSphere(int id)
     {
         var command = commandList[id];
@@ -91,7 +101,9 @@ public class AISensorManager : MonoBehaviour
         commandList[id] = command;
     }
 
-    //Return the collider results
+    /// <summary>
+    /// Retrieves the batched collider hit results for a specific overlap sphere ID after the job has completed.
+    /// </summary>
     public Collider[] GetOverlapSphereResults(int id)
     {
         try
@@ -110,6 +122,10 @@ public class AISensorManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Executes the batched overlap sphere commands across all registered sensors utilizing the Unity Job System.
+    /// Alternates frames between scheduling the job and copying the finished results to minimize main-thread stalling.
+    /// </summary>
     private void Update()
     {
         if (commandList.Count > 0)

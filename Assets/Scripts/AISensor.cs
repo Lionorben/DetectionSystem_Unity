@@ -5,20 +5,25 @@ using UnityEngine;
 
 public class AISensor : MonoBehaviour
 {
-    public bool showGizmos = false;
-    public float distance = 10;
-    public float angle = 30;
-    public float height = 1.0f;
-    public Color meshColor = Color.red;
-    public int scanFrequency = 30;
-    public LayerMask layers;
-    public LayerMask occlusionLayers;
+    [SerializeField] private bool showGizmos = false;
+    [SerializeField] private float distance = 10f;
+    [SerializeField] private float angle = 30f;
+    [SerializeField] private float height = 1.0f;
+    [SerializeField] private Color meshColor = Color.red;
+    [SerializeField] private int scanFrequency = 30;
+    [SerializeField] private LayerMask layers;
+    [SerializeField] private bool alwaysCheckOcclusion = true;
+    [SerializeField] private LayerMask occlusionLayers;
 
     [Header("Visualization")]
-    public MeshFilter viewMeshFilter;
-    public float meshResolution = 1f;
-    public int edgeResolveIterations = 4;
-    public float edgeDstThreshold = 0.5f;
+    [SerializeField] private MeshFilter viewMeshFilter;
+    [SerializeField] private float meshResolution = 1f;
+    [SerializeField] private int edgeResolveIterations = 4;
+    [SerializeField] private float edgeDstThreshold = 0.5f;
+
+    public float Distance { get => distance; set => distance = value; }
+    public float Angle { get => angle; set => angle = value; }
+    public float Height { get => height; set => height = value; }
 
     public struct ViewCastInfo
     {
@@ -48,18 +53,19 @@ public class AISensor : MonoBehaviour
         }
     }
 
-    public int overlapSphereID = -1;
+    private int overlapSphereID = -1;
 
+    private List<GameObject> objectsInSight = new List<GameObject>();
+    public List<GameObject> ObjectsInSight => objectsInSight;
 
-    
-    public List<GameObject> objectsInSight = new List<GameObject>();
+    private List<GameObject> objectsInRadius = new List<GameObject>();
+    public List<GameObject> ObjectsInRadius => objectsInRadius;
 
-    public List<GameObject> ObjectsInRadius = new List<GameObject>();
-    public Collider[] colliders;
+    private Collider[] colliders;
     private Mesh mesh;
-    int count;
-    float scanInterval;
-    float scanTimer;
+    private int count;
+    private float scanInterval;
+    private float scanTimer;
     private Material viewMaterial;
 
     void Start()
@@ -96,7 +102,7 @@ public class AISensor : MonoBehaviour
         if (JobsEnabled)
         {
             PrepareScan();
-            if (AISensorManager.Instance.overlapSphereJobHandle.IsCompleted)
+            if (AISensorManager.Instance.OverlapSphereJobHandle.IsCompleted)
             {
                 Scan();
             }
@@ -117,6 +123,10 @@ public class AISensor : MonoBehaviour
         DrawFieldOfView();
     }
 
+    /// <summary>
+    /// Dynamically constructs the field of view visualization mesh based on the sensor's parameters,
+    /// raycasting outward to detect occlusions and creating geometry to match the visible area.
+    /// </summary>
     void DrawFieldOfView()
     {
         int stepCount = Mathf.Max(1, Mathf.RoundToInt(angle * 2 * meshResolution));
@@ -245,6 +255,9 @@ public class AISensor : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Casts a ray at a specific angle to determine if there's an obstruction within the sensor's distance.
+    /// </summary>
     ViewCastInfo ViewCast(float globalAngle)
     {
         Vector3 dir = Quaternion.Euler(0, globalAngle, 0) * transform.forward;
@@ -260,6 +273,10 @@ public class AISensor : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Uses iterative binary search to find the exact edge of an occluding object,
+    /// allowing the field of view mesh to wrap tightly around corners and obstacles.
+    /// </summary>
     EdgeInfo FindEdge(ViewCastInfo minViewCast, ViewCastInfo maxViewCast)
     {
         float minAngle = minViewCast.angle;
@@ -288,12 +305,18 @@ public class AISensor : MonoBehaviour
         return new EdgeInfo(minPoint, maxPoint);
     }
 
-
+    /// <summary>
+    /// Queues an overlap sphere command into the AISensorManager for the current frame to batch collision queries.
+    /// </summary>
     private void PrepareScan()
     {
         overlapSphereID = AISensorManager.Instance.AddOverlapSphere(transform.position, distance, layers, overlapSphereID);
     }
 
+    /// <summary>
+    /// Processes the results of the overlap sphere query to determine which objects are within radius,
+    /// and further checks which of those are directly within the line of sight.
+    /// </summary>
     private void Scan()
     {
         if (JobsEnabled)
@@ -320,6 +343,13 @@ public class AISensor : MonoBehaviour
             {
                 continue;
             }
+            Vector3 origin = transform.position;
+            Vector3 dest = obj.transform.position;
+            if (alwaysCheckOcclusion && Physics.Linecast(origin, dest, occlusionLayers)) 
+            {
+                //object is occluded so we wont even add them to our objects in radius
+                continue;
+            }
 
             ObjectsInRadius.Add(obj);
             if (IsInSight(obj))
@@ -335,6 +365,10 @@ public class AISensor : MonoBehaviour
             AISensorManager.Instance.RemoveOverlapSphere(overlapSphereID);
     }
 
+    /// <summary>
+    /// Determines whether a specific game object is within the sensor's line of sight.
+    /// Evaluates height, angular bounds (FOV), and performs a linecast to check for occluding geometry.
+    /// </summary>
     public bool IsInSight(GameObject obj)
     {
         Vector3 origin = transform.position;
@@ -354,13 +388,16 @@ public class AISensor : MonoBehaviour
         }
         origin.y += height / 2;
         dest.y = origin.y;
-        if (Physics.Linecast(origin, dest, occlusionLayers))
+        if (!alwaysCheckOcclusion && Physics.Linecast(origin, dest, occlusionLayers))
         {
             return false;
         }
         return true;
     }
 
+    /// <summary>
+    /// Creates a default, un-occluded wedge mesh representing the sensor's maximum possible field of view.
+    /// </summary>
     public Mesh CreateWedgeMesh()
     {
         Mesh mesh = new Mesh();

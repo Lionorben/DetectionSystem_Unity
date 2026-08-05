@@ -3,13 +3,13 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody))]
 public class SimplePlayerController : Sentient
 {
-    private Rigidbody rb;
-    private Vector3 moveDirection;
+    private Rigidbody _rb;
+    private Vector3 _moveDirection;
 
     protected override void Start()
     {
         base.Start();
-        rb = GetComponent<Rigidbody>();
+        _rb = GetComponent<Rigidbody>();
     }
 
     protected override void Update()
@@ -36,18 +36,18 @@ public class SimplePlayerController : Sentient
         }
 
         // Normalize the vector so diagonals are not faster
-        moveDirection = new Vector3(moveX, 0f, moveZ).normalized;
+        _moveDirection = new Vector3(moveX, 0f, moveZ).normalized;
     }
 
     private void FixedUpdate()
     {
-        if (rb != null)
+        if (_rb != null)
         {
             // Move the Rigidbody using velocity. We keep the current Y velocity to allow gravity to act on it.
-            rb.linearVelocity = new Vector3(moveDirection.x * maxSpeed, rb.linearVelocity.y, moveDirection.z * maxSpeed);
+            _rb.linearVelocity = new Vector3(_moveDirection.x * MaxSpeed, _rb.linearVelocity.y, _moveDirection.z * MaxSpeed);
 
             // Update the current speed in the Sentient class
-            currentSpeed = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z).magnitude;
+            CurrentSpeed = new Vector3(_rb.linearVelocity.x, 0f, _rb.linearVelocity.z).magnitude;
         }
     }
 }

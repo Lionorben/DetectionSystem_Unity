@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    public DetectionManager[] enemyDetectionManagers;
+    [SerializeField] private DetectionManager[] enemyDetectionManagers;
 
 
     void Start()
@@ -24,6 +24,10 @@ public class GameManager : MonoBehaviour
         
     }
 
+    /// <summary>
+    /// Callback triggered when a player is detected by an enemy's DetectionManager.
+    /// Restarts the current scene to reset the game state.
+    /// </summary>
     public void PlayerDetected(Sentient sentient) 
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);

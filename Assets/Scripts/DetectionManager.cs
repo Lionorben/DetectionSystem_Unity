@@ -5,35 +5,32 @@ using System.Linq;
 using UnityEngine;
 
 
-//TO:DO: add single target mode toggle to sensor and detection manager
 [RequireComponent(typeof(AISensor))]
 public class DetectionManager : MonoBehaviour
 {
     #region Sight Settings
-
-    public float halfSightFOV = 90;
-
-    public float sightDistance = 40;
-
-    public float sightHeight = 20;
+    [SerializeField] private float halfSightFOV = 90f;
+    [SerializeField] private float sightDistance = 40f;
+    [SerializeField] private float sightHeight = 20f;
 
 
-    public float suspicionThreshold = 10;
+    [SerializeField] private float suspicionThreshold = 10f;
 
-    public AnimationCurve inSightDetectionRate = AnimationCurve.Constant(0, 1, 1);
+    [SerializeField] private AnimationCurve inSightDetectionRate = AnimationCurve.Constant(0, 1, 1);
 
-    public AnimationCurve outSightDetectionRate = AnimationCurve.Constant(0, 1, 1);
+    [SerializeField] private AnimationCurve outSightDetectionRate = AnimationCurve.Constant(0, 1, 1);
 
-    public AnimationCurve distanceMult = AnimationCurve.Linear(0, 3, 1, 1);
+    [SerializeField] private AnimationCurve distanceMult = AnimationCurve.Linear(0, 3, 1, 1);
 
-    //[TabGroup("Performance Settings")]
-    private int MaxSentientsAwareness = 5;
+    private int _maxSentientsAwareness = 5;
 
-    public float frameTimeBetweenSightLoops = 30;
+    [SerializeField] private float timeBetweenSightLoops = 0.1f;
 
-    public Dictionary<Sentient, float> monitoredSentients = new Dictionary<Sentient, float>();
+    private WaitForSeconds _sightLoopWaitForSeconds;
 
-    public List<Sentient> detectedSentients = new List<Sentient>();
+    private Dictionary<Sentient, float> _monitoredSentients = new Dictionary<Sentient, float>();
+
+    private List<Sentient> _detectedSentients = new List<Sentient>();
 
     [SerializeField] private Color baseGizmoColor = new Color(1, 0, 0, 0.1f);
     [SerializeField] private Color detectedGizmoColor = new Color(0, 1, 0, 0.1f);
@@ -42,26 +39,30 @@ public class DetectionManager : MonoBehaviour
 
     #endregion
 
-    public AISensor sensor;
+    private AISensor _sensor;
 
 
     public void Start()
     {
-        MaxSentientsAwareness = AISensorManager.Instance.MaxColliderHits;
-
-        sensor = GetComponent<AISensor>();
-        sensor.angle = halfSightFOV;
-        sensor.distance = sightDistance;
-        sensor.height = sightHeight;
+        _maxSentientsAwareness = AISensorManager.Instance.MaxColliderHits;
+        _sightLoopWaitForSeconds = new WaitForSeconds(timeBetweenSightLoops);
+        _sensor = GetComponent<AISensor>();
+        _sensor.Angle = halfSightFOV;
+        _sensor.Distance = sightDistance;
+        _sensor.Height = sightHeight;
         StartCoroutine(SightLogicLoop());
     }
 
+    /// <summary>
+    /// Coroutine that continuously monitors all detected objects in radius on a set interval.
+    /// Manages the addition and removal of sentients from the monitored list and triggers suspicion updates.
+    /// </summary>
     public IEnumerator SightLogicLoop()
     {
         while (true)
         {
             List<Sentient> sentientsInRadius = new List<Sentient>();
-            foreach (GameObject obj in sensor.ObjectsInRadius)
+            foreach (GameObject obj in _sensor.ObjectsInRadius)
             {
                 Sentient currentSentient = obj.GetComponent<Sentient>();
                 if (currentSentient == null)
@@ -75,16 +76,14 @@ public class DetectionManager : MonoBehaviour
 
                 sentientsInRadius.Add(currentSentient);
 
-                if (!monitoredSentients.ContainsKey(currentSentient))
+                if (!_monitoredSentients.ContainsKey(currentSentient))
                 {
                     
                     AddSentientToMonitor(currentSentient);
                 }
             }
 
-
-
-            foreach (Sentient sentient in monitoredSentients.Keys.ToList())
+            foreach (Sentient sentient in _monitoredSentients.Keys.ToList())
             {
                 if (!sentientsInRadius.Contains(sentient))
                 {
@@ -95,40 +94,46 @@ public class DetectionManager : MonoBehaviour
             //update suspision
             UpdateSuspision();
 
-            int frame = 0;
-            while (frame < frameTimeBetweenSightLoops)
-            {
-                frame++;
-                yield return null;
-            }
+            yield return _sightLoopWaitForSeconds; 
         }
     }
 
 
+    /// <summary>
+    /// Removes a sentient from being monitored and clears it from the detected list if present.
+    /// </summary>
     public void RemoveSentitentFromMonitor(Sentient sentitent)
     {
-        if (monitoredSentients.ContainsKey(sentitent))
+        if (_monitoredSentients.ContainsKey(sentitent))
         {
-            monitoredSentients.Remove(sentitent);
+            _monitoredSentients.Remove(sentitent);
         }
-        if (detectedSentients.Contains(sentitent))
+        if (_detectedSentients.Contains(sentitent))
         {
-            detectedSentients.Remove(sentitent);
+            _detectedSentients.Remove(sentitent);
         }
     }
 
+    /// <summary>
+    /// Adds a newly encountered sentient to the monitoring dictionary with an initial suspicion of zero.
+    /// </summary>
     public void AddSentientToMonitor(Sentient sentitent)
     {
-        monitoredSentients.Add(sentitent, 0);
+        _monitoredSentients.Add(sentitent, 0);
     }
 
+    /// <summary>
+    /// Evaluates the suspicion level for all monitored sentients. 
+    /// Suspicion increases differently depending on whether the sentient is currently in line of sight or not.
+    /// Triggers detection if suspicion exceeds the designated threshold.
+    /// </summary>
     public void UpdateSuspision()
     {
         float highestSuspicion = 0;
-        foreach (Sentient currentSentient in monitoredSentients.Keys.ToList())
+        foreach (Sentient currentSentient in _monitoredSentients.Keys.ToList())
         {
-            float currentSuspicion = monitoredSentients[currentSentient];
-            if (sensor.objectsInSight.Contains(currentSentient.collider.gameObject))
+            float currentSuspicion = _monitoredSentients[currentSentient];
+            if (_sensor.ObjectsInSight.Contains(currentSentient.SentientCollider.gameObject))
             {
                 // Update suspicion based on in sight values
                 currentSuspicion += GetInSightSuspicionChange(currentSentient);
@@ -141,12 +146,11 @@ public class DetectionManager : MonoBehaviour
             currentSuspicion = Mathf.Clamp(currentSuspicion, 0, suspicionThreshold);
             if (currentSuspicion >= suspicionThreshold)
             {
-                //Debug.Log(currentSentient.name + " Detected by " + gameObject.name);
                 SentientDetected(currentSentient);
             }
 
             // Update the dictionary directly
-            monitoredSentients[currentSentient] = currentSuspicion;
+            _monitoredSentients[currentSentient] = currentSuspicion;
 
             //check for highest suspicion change
             if(currentSuspicion > highestSuspicion) 
@@ -161,19 +165,23 @@ public class DetectionManager : MonoBehaviour
     {
         float normalizedSuspicion = highestSuspicion / suspicionThreshold;
         Color sensorColor = Color.Lerp(baseGizmoColor, detectedGizmoColor, 1 - normalizedSuspicion);
-        sensor.UpdateMeshColor(sensorColor);
+        _sensor.UpdateMeshColor(sensorColor);
     }
 
 
+    /// <summary>
+    /// Calculates the change in suspicion for a sentient that is currently within the sensor's line of sight.
+    /// Factors in the sentient's normalized speed, individual detection multiplier, and distance from the sensor.
+    /// </summary>
     public float GetInSightSuspicionChange(Sentient sentient)
     {
         
         //get the normalized speed to use on the curves
-        float normalizedSpeed = sentient.normalizedSpeed;
+        float normalizedSpeed = sentient.NormalizedSpeed;
         //get inital detection rate
         float detectionRate = inSightDetectionRate.Evaluate(normalizedSpeed);
         //multiply the detection rate by sentient detectionMult
-        detectionRate *= sentient.detectionMultiplier;
+        detectionRate *= sentient.DetectionMultiplier;
 
         //only do distance mult if detection rate is greater than 0
         if (detectionRate > 0)
@@ -183,17 +191,21 @@ public class DetectionManager : MonoBehaviour
             //multiply the detection rate by our distance mult
             detectionRate *= distanceMult.Evaluate(normalizedDistance);
         }
-        return detectionRate;
+        return detectionRate * timeBetweenSightLoops;
     }
 
+    /// <summary>
+    /// Calculates the change in suspicion for a sentient that is currently outside the sensor's line of sight,
+    /// usually resulting in a slower suspicion gain or decay based on the out-of-sight animation curve.
+    /// </summary>
     public float GetOutOfSightSuspicionChange(Sentient sentient)
     {
         //get the normalized speed to use on the curves
-        float normalizedSpeed = sentient.normalizedSpeed;
+        float normalizedSpeed = sentient.NormalizedSpeed;
         //get inital detection rate
         float detectionRate = outSightDetectionRate.Evaluate(normalizedSpeed);
         //multiply the detection rate by sentient detectionMult
-        detectionRate *= sentient.detectionMultiplier;
+        detectionRate *= sentient.DetectionMultiplier;
 
 
         //only do distance mult if detection rate is greater than 0
@@ -204,18 +216,21 @@ public class DetectionManager : MonoBehaviour
             //multiply the detection rate by our distance mult
             detectionRate *= distanceMult.Evaluate(normalizedDistance);
         }
-        return detectionRate;
+        return detectionRate * timeBetweenSightLoops;
     }
 
+    /// <summary>
+    /// Registers a sentient as fully detected, adding it to the awareness list and firing the detection event.
+    /// Ensures we do not exceed the maximum allowed number of simultaneously detected sentients.
+    /// </summary>
     public void SentientDetected(Sentient sentient)
     {
-        //Maximize 50 sentients for performance
-        if (detectedSentients.Count < MaxSentientsAwareness)
+        if (_detectedSentients.Count < _maxSentientsAwareness)
         {
-            if (!detectedSentients.Contains(sentient))
+            if (!_detectedSentients.Contains(sentient))
             {
                 OnSentientDetected?.Invoke(sentient);
-                detectedSentients.Add(sentient);
+                _detectedSentients.Add(sentient);
             }
         }
     }

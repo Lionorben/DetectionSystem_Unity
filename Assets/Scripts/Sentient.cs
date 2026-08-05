@@ -2,20 +2,29 @@ using UnityEngine;
 
 public class Sentient : MonoBehaviour
 {
-    [SerializeField] protected float maxSpeed = 5;
-    [SerializeField] protected float currentSpeed = 0;
-    public float normalizedSpeed = 0;
-    [Header("Detection Settings")]
-    public float detectionMultiplier = 1;
+    [SerializeField] private float maxSpeed = 5f;
+    [SerializeField] private float currentSpeed = 0f;
 
-    public Collider collider;
+    [Header("Detection Settings")]
+    [SerializeField] private float detectionMultiplier = 1f;
+
+    public float NormalizedSpeed { get; private set; } = 0f;
+    public float DetectionMultiplier => detectionMultiplier;
+    public Collider SentientCollider { get; private set; }
+
+    protected float MaxSpeed => maxSpeed;
+    protected float CurrentSpeed 
+    { 
+        get => currentSpeed; 
+        set => currentSpeed = value; 
+    }
     
     protected virtual void Start()
     {
-        collider = GetComponentInChildren<Collider>();
+        SentientCollider = GetComponentInChildren<Collider>();
         if (maxSpeed != 0) 
         {
-            normalizedSpeed = currentSpeed / maxSpeed;
+            NormalizedSpeed = currentSpeed / maxSpeed;
         }
     }
 
@@ -23,7 +32,7 @@ public class Sentient : MonoBehaviour
     {
         if (maxSpeed != 0) 
         {
-            normalizedSpeed = currentSpeed / maxSpeed;
+            NormalizedSpeed = currentSpeed / maxSpeed;
         }
     }
 }

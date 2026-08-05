@@ -3,13 +3,13 @@ using UnityEngine;
 public class EnemyRotation : MonoBehaviour
 {
     [Tooltip("The maximum angle (in degrees) to rotate in either direction from the start rotation.")]
-    public float maxRotationAngle = 45f;
+    [SerializeField] private float maxRotationAngle = 45f;
 
     [Tooltip("The time in seconds it takes to complete one full back-and-forth rotation cycle.")]
-    public float cycleDuration = 2f;
+    [SerializeField] private float cycleDuration = 2f;
 
     [Tooltip("The axis around which the enemy will rotate.")]
-    public Vector3 rotationAxis = Vector3.up;
+    [SerializeField] private Vector3 rotationAxis = Vector3.up;
 
     private Quaternion _startRotation;
 
@@ -19,6 +19,10 @@ public class EnemyRotation : MonoBehaviour
         _startRotation = transform.rotation;
     }
 
+    /// <summary>
+    /// Calculates and applies a smooth back-and-forth rotation using a sine wave, 
+    /// pivoting around the specified rotation axis relative to the initial starting rotation.
+    /// </summary>
     void Update()
     {
         if (cycleDuration <= 0f) return;
