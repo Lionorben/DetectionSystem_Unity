@@ -107,9 +107,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Sentient
   maxSpeed: 0
   currentSpeed: 0
-  normalizedSpeed: 0
   detectionMultiplier: 1
-  collider: {fileID: 0}
 --- !u!114 &6239331054225650685
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -198,11 +196,9 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  frameTimeBetweenSightLoops: 30
-  detectedSentients: []
+  timeBetweenSightLoops: 0.1
   baseGizmoColor: {r: 1, g: 0, b: 0, a: 0.20392157}
   detectedGizmoColor: {r: 0, g: 1, b: 0, a: 0.20392157}
-  sensor: {fileID: 0}
 --- !u!114 &6641081378898928594
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -224,6 +220,7 @@ MonoBehaviour:
   layers:
     serializedVersion: 2
     m_Bits: 256
+  alwaysCheckOcclusion: 1
   occlusionLayers:
     serializedVersion: 2
     m_Bits: 128
@@ -231,10 +228,6 @@ MonoBehaviour:
   meshResolution: 1
   edgeResolveIterations: 4
   edgeDstThreshold: 0.5
-  overlapSphereID: -1
-  objectsInSight: []
-  ObjectsInRadius: []
-  colliders: []
 --- !u!114 &4503719348602529903
 MonoBehaviour:
   m_ObjectHideFlags: 0

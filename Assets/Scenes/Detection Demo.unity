@@ -378,6 +378,7 @@ MonoBehaviour:
   - {fileID: 690474732}
   - {fileID: 1835208106}
   - {fileID: 1673711167}
+  - {fileID: 744110768}
 --- !u!4 &495872659
 Transform:
   m_ObjectHideFlags: 0
@@ -405,7 +406,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9ef0e44ba9988f4d83f5c8d4ab545b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AISensorManager
-  MaxColliderHits: 5
+  maxColliderHits: 5
 --- !u!1 &641411623
 GameObject:
   m_ObjectHideFlags: 0
@@ -577,6 +578,74 @@ MeshFilter:
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6239331054225650685, guid: d54bb696c8e2f4e488fc7febb56afee8, type: 3}
   m_PrefabInstance: {fileID: 1672111976}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9b392fe2415f634892347040c7f571d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DetectionManager
+--- !u!1001 &744110767
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3484201433729115576, guid: d54bb696c8e2f4e488fc7febb56afee8, type: 3}
+      propertyPath: m_Name
+      value: Enemy
+      objectReference: {fileID: 0}
+    - target: {fileID: 8862678095366105708, guid: d54bb696c8e2f4e488fc7febb56afee8, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 17
+      objectReference: {fileID: 0}
+    - target: {fileID: 8862678095366105708, guid: d54bb696c8e2f4e488fc7febb56afee8, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8862678095366105708, guid: d54bb696c8e2f4e488fc7febb56afee8, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8862678095366105708, guid: d54bb696c8e2f4e488fc7febb56afee8, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.38268343
+      objectReference: {fileID: 0}
+    - target: {fileID: 8862678095366105708, guid: d54bb696c8e2f4e488fc7febb56afee8, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8862678095366105708, guid: d54bb696c8e2f4e488fc7febb56afee8, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.92387956
+      objectReference: {fileID: 0}
+    - target: {fileID: 8862678095366105708, guid: d54bb696c8e2f4e488fc7febb56afee8, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8862678095366105708, guid: d54bb696c8e2f4e488fc7febb56afee8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8862678095366105708, guid: d54bb696c8e2f4e488fc7febb56afee8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -135
+      objectReference: {fileID: 0}
+    - target: {fileID: 8862678095366105708, guid: d54bb696c8e2f4e488fc7febb56afee8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: d54bb696c8e2f4e488fc7febb56afee8, type: 3}
+--- !u!114 &744110768 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6239331054225650685, guid: d54bb696c8e2f4e488fc7febb56afee8, type: 3}
+  m_PrefabInstance: {fileID: 744110767}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
@@ -1103,9 +1172,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SimplePlayerController
   maxSpeed: 5
   currentSpeed: 0
-  normalizedSpeed: 0
-  detectionMultiplier: 1
-  collider: {fileID: 641411625}
+  detectionMultiplier: 3
 --- !u!54 &1246210035
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1981,6 +2048,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Enemy
       objectReference: {fileID: 0}
+    - target: {fileID: 6641081378898928594, guid: d54bb696c8e2f4e488fc7febb56afee8, type: 3}
+      propertyPath: occludeWhenOutOfSightAngle
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8862678095366105708, guid: d54bb696c8e2f4e488fc7febb56afee8, type: 3}
       propertyPath: m_LocalPosition.x
       value: -5.53
@@ -2115,5 +2186,6 @@ SceneRoots:
   - {fileID: 1672111976}
   - {fileID: 1077321024}
   - {fileID: 962172153}
+  - {fileID: 744110767}
   - {fileID: 1226620907}
   - {fileID: 495872659}
